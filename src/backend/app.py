@@ -1,9 +1,9 @@
 import os
-import json
 import numpy as np
 import requests
 import pandas as pd
 import logging
+import sqlite3
 from datetime import datetime
 from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
@@ -19,30 +19,31 @@ CORS(app)
 # Carregar o modelo LSTM
 model = load_model('models/model_lstm.h5')
 
-# Definir o caminho do arquivo de log (JSON)
-log_file_path = 'logs/system_logs.json'
+# Função para criar e conectar ao banco de dados SQLite
+def init_db():
+    conn = sqlite3.connect('database.db')  # Nome do arquivo do banco de dados
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            action TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            details TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
 
-# Função para adicionar um log ao arquivo JSON
+# Função para adicionar um log ao banco de dados
 def log_action(action, details):
-    log_entry = {
-        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        'action': action,
-        'details': details
-    }
-    if not os.path.exists('logs'):
-        os.makedirs('logs')  # Cria o diretório de logs se não existir
-    
-    # Carregar o conteúdo existente do arquivo JSON ou criar um novo
-    if os.path.exists(log_file_path):
-        with open(log_file_path, 'r') as f:
-            logs = json.load(f)
-    else:
-        logs = []
-
-    # Adicionar o novo log e salvar no arquivo
-    logs.append(log_entry)
-    with open(log_file_path, 'w') as f:
-        json.dump(logs, f, indent=4)
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO logs (action, details, timestamp)
+        VALUES (?, ?, ?)
+    ''', (action, str(details), datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+    conn.commit()
+    conn.close()
 
 # Função para obter os últimos preços do Bitcoin do CoinGecko
 def get_last_month_prices():
@@ -186,23 +187,26 @@ def retrain():
 # Função para criar sequências (definida anteriormente)
 def create_sequences(data, seq_length):
     X, y = [], []
-    for i in range(len(data)-seq_length-1):
-        X.append(data[i:(i+seq_length), 0])
+    for i in range(len(data) - seq_length - 1):
+        X.append(data[i:(i + seq_length), 0])
         y.append(data[i + seq_length, 0])
     return np.array(X), np.array(y)
 
 @app.route('/logs', methods=['GET'])
 def get_logs():
     try:
-        # Carregar os logs do arquivo JSON
-        if os.path.exists(log_file_path):
-            with open(log_file_path, 'r') as f:
-                logs = json.load(f)
-            return jsonify({"logs": logs[-100:]})  # Retorna os últimos 100 logs
-        else:
-            return jsonify({"logs": []})
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        cursor.execute('SELECT action, timestamp, details FROM logs ORDER BY timestamp DESC LIMIT 100')
+        logs = cursor.fetchall()
+        conn.close()
+
+        # Formatar os logs para JSON
+        formatted_logs = [{'action': log[0], 'timestamp': log[1], 'details': log[2]} for log in logs]
+        return jsonify({"logs": formatted_logs})  # Retorna os últimos 100 logs
     except Exception as e:
         return jsonify({"error": "Não foi possível acessar os logs."}), 500
 
 if __name__ == '__main__':
+    init_db()  # Chama a função para inicializar o banco de dados
     app.run(debug=True)
