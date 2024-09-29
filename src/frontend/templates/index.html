@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <div>
+    <div class="container"> <!-- Contêiner para centralizar os itens -->
         <h1>Previsão de Preços de Bitcoin</h1>
         <label for="days-select">Escolha o número de dias de previsão:</label>
         <select id="days-select">
@@ -15,13 +15,25 @@
             <option value="14">14 Dias</option>
             <option value="30">30 Dias</option>
         </select>
+        
+        <!-- Análises -->
         <div id="price-analysis"></div>
         <div id="best-buy-date"></div>
         <div id="trend-analysis"></div>
         <div id="alert-message"></div> <!-- Área para mensagens de alerta -->
+        
+        <!-- Gráfico -->
         <div id="bitcoin-price-graph"></div>
+
+        <!-- Botão de retreinamento -->
+        <button id="retrain-model">Retreinar o modelo com os dados históricos do último ano</button>
+        
+        <!-- Resultado do retreinamento -->
+        <div id="retrain-result"></div> <!-- Área para exibir resultados do retreinamento -->
     </div>
+    
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
+
 </html>

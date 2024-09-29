@@ -1,21 +1,86 @@
+/* Estilo do contêiner */
+.container {
+    display: flex;
+    flex-direction: column; /* Alinha os elementos na vertical */
+    align-items: center;     /* Centraliza horizontalmente */
+    justify-content: flex-start; /* Alinha os itens no topo */
+    width: 100%;            /* Largura total do contêiner */
+    padding: 20px;         /* Espaçamento interno do contêiner */
+}
+
+/* Reset básico para margens e preenchimentos */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Estilo do corpo */
 body {
     font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
+    background-color: #f4f4f9;
     color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
-.container {
-    width: 80%;
-    margin: auto;
-    overflow: hidden;
-}
-
+/* Estilo do título */
 h1 {
-    text-align: center;
-    margin: 20px 0;
+    margin-bottom: 20px;
+    color: #007bff;
 }
 
+/* Estilo do seletor */
+label {
+    font-weight: bold;
+}
+
+/* Estilo do seletor de dias */
+select {
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #007bff;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+/* Estilo dos containers de análise */
+#price-analysis,
+#best-buy-date,
+#trend-analysis,
+#alert-message,
+#retrain-result {
+    margin: 20px 0;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    width: 80%;
+    max-width: 600px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+/* Estilo do gráfico */
 #bitcoin-price-graph {
-    width: 100%;
-    height: 600px;
+    width: 100%; /* Faz o gráfico preencher a largura do contêiner */
+    height: 400px; /* Altura do gráfico, ajuste conforme necessário */
+    margin: 20px 0; /* Margem acima e abaixo do gráfico */
+}
+
+/* Estilo do botão de retreinamento */
+button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #0056b3;
 }

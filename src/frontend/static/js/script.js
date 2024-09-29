@@ -69,4 +69,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Chamar a função com o valor padrão ao carregar
     updateGraph(7);
+
+    // Função para retreinar o modelo
+    function retrainModel() {
+        fetch('http://127.0.0.1:5000/retrain', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('retrain-result');
+                if (data.success) {
+                    resultDiv.innerHTML = `<p>Retreinamento bem-sucedido!</p>
+                                           <p>MSE: ${data.mse}</p>
+                                           <p>RMSE: ${data.rmse}</p>
+                                           <p>R²: ${data.r2}</p>`;
+                } else {
+                    resultDiv.innerHTML = `<p style="color: red;">Erro: ${data.error}</p>`;
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao retreinar o modelo:', error);
+                document.getElementById('retrain-result').innerHTML = `<p style="color: red;">Erro ao retreinar o modelo.</p>`;
+            });
+    }
+
+    // Adicionar listener para o botão de retreinamento
+    document.getElementById('retrain-model').addEventListener('click', retrainModel);
 });
