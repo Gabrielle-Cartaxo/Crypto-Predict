@@ -1,14 +1,24 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <title>Previsão de Preços de Bitcoin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <div>
         <h1>Previsão de Preços de Bitcoin</h1>
+        <label for="days-select">Escolha o número de dias de previsão:</label>
+        <select id="days-select">
+            <option value="7">7 Dias</option>
+            <option value="14">14 Dias</option>
+            <option value="30">30 Dias</option>
+        </select>
+        <div id="price-analysis"></div>
+        <div id="best-buy-date"></div>
+        <div id="trend-analysis"></div>
+        <div id="alert-message"></div> <!-- Área para mensagens de alerta -->
         <div id="bitcoin-price-graph"></div>
     </div>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
