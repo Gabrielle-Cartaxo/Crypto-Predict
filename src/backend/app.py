@@ -1,6 +1,10 @@
+import os
+import json
 import numpy as np
 import requests
 import pandas as pd
+import logging
+from datetime import datetime
 from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 from tensorflow.keras.models import load_model
@@ -9,13 +13,36 @@ from tensorflow.keras.layers import LSTM, Dropout, Dense
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error, r2_score
 
-from sklearn.preprocessing import MinMaxScaler
-
 app = Flask(__name__)
 CORS(app)
 
 # Carregar o modelo LSTM
 model = load_model('models/model_lstm.h5')
+
+# Definir o caminho do arquivo de log (JSON)
+log_file_path = 'logs/system_logs.json'
+
+# Função para adicionar um log ao arquivo JSON
+def log_action(action, details):
+    log_entry = {
+        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'action': action,
+        'details': details
+    }
+    if not os.path.exists('logs'):
+        os.makedirs('logs')  # Cria o diretório de logs se não existir
+    
+    # Carregar o conteúdo existente do arquivo JSON ou criar um novo
+    if os.path.exists(log_file_path):
+        with open(log_file_path, 'r') as f:
+            logs = json.load(f)
+    else:
+        logs = []
+
+    # Adicionar o novo log e salvar no arquivo
+    logs.append(log_entry)
+    with open(log_file_path, 'w') as f:
+        json.dump(logs, f, indent=4)
 
 # Função para obter os últimos preços do Bitcoin do CoinGecko
 def get_last_month_prices():
@@ -24,9 +51,6 @@ def get_last_month_prices():
     data = response.json()
     prices = [price[1] for price in data['prices']]
     return prices
-
-# Parâmetros do modelo
-sequence_length = 30
 
 # Função para obter os últimos 365 preços do Bitcoin do CoinGecko
 def get_last_year_prices():
@@ -53,7 +77,7 @@ def predict():
         scaled_data = scaler.fit_transform(np.array(last_prices).reshape(-1, 1))
 
         # Criar sequências de entrada para previsão
-        X_input = scaled_data[-sequence_length:].reshape((1, sequence_length, 1))
+        X_input = scaled_data[-30:].reshape((1, 30, 1))
 
         # Fazer a previsão para os próximos dias
         predicted_prices = []
@@ -64,17 +88,21 @@ def predict():
             new_input = np.append(X_input[:, 1:, :], predicted.reshape(1, 1, 1), axis=1)
             X_input = new_input
 
-        last_prices = last_prices[-30:]  # Últimos 30 preços reais
-
-        # Lógica para determinar se o Bitcoin está mais barato/caro nos próximos dias
+        # Análise de tendência
+        last_prices = last_prices[-30:]
         current_price = last_prices[-1]
         price_analysis = "mais caro" if predicted_prices[0] > current_price else "mais barato"
-
-        # Encontrar a melhor data para compra
         best_buy_date = predicted_prices.index(min(predicted_prices))
-
-        # Calcular a tendência
         trend_analysis = "desvalorização" if np.mean(predicted_prices) < current_price else "valorização"
+
+        # Adicionar um log de previsão
+        log_action('predict', {
+            'last_prices': last_prices,
+            'predicted_prices': predicted_prices,
+            'price_analysis': price_analysis,
+            'best_buy_date': best_buy_date,
+            'trend_analysis': trend_analysis
+        })
 
         return jsonify({
             'last_prices': last_prices,
@@ -84,8 +112,9 @@ def predict():
             'trend_analysis': trend_analysis
         })
     except Exception as e:
+        log_action('predict_error', {'error': str(e)})
         return jsonify({"error": str(e)}), 500
-    
+
 @app.route('/retrain', methods=['POST'])
 def retrain():
     try:
@@ -94,15 +123,14 @@ def retrain():
 
         # Preparação dos dados
         df = pd.DataFrame(last_year_prices, columns=['price'])
-        df['moving_avg'] = df['price'].rolling(window=30).mean()  # Exemplo de cálculo de média móvel
+        df['moving_avg'] = df['price'].rolling(window=30).mean()
 
         # Normalização dos dados
         scaler = MinMaxScaler(feature_range=(0, 1))
         scaled_data = scaler.fit_transform(df['moving_avg'].dropna().values.reshape(-1, 1))
 
         # Criar sequências de entrada (X) e saídas correspondentes (y)
-        sequence_length = 30
-        X, y = create_sequences(scaled_data, sequence_length)
+        X, y = create_sequences(scaled_data, 30)
 
         # Divisão em treino e teste
         train_size = int(len(X) * 0.8)
@@ -115,7 +143,7 @@ def retrain():
 
         # Criar o modelo LSTM
         model = Sequential()
-        model.add(LSTM(50, return_sequences=True, input_shape=(sequence_length, 1)))
+        model.add(LSTM(50, return_sequences=True, input_shape=(30, 1)))
         model.add(Dropout(0.2))
         model.add(LSTM(50))
         model.add(Dropout(0.2))
@@ -138,6 +166,13 @@ def retrain():
         # Salvar o modelo treinado
         model.save('models/model_lstm.h5')
 
+        # Adicionar um log de retreinamento
+        log_action('retrain', {
+            'mse': mse,
+            'rmse': rmse,
+            'r2': r2
+        })
+
         return jsonify({
             'success': True,
             'mse': mse,
@@ -145,6 +180,7 @@ def retrain():
             'r2': r2
         })
     except Exception as e:
+        log_action('retrain_error', {'error': str(e)})
         return jsonify({"error": str(e)}), 500
 
 # Função para criar sequências (definida anteriormente)
@@ -154,6 +190,19 @@ def create_sequences(data, seq_length):
         X.append(data[i:(i+seq_length), 0])
         y.append(data[i + seq_length, 0])
     return np.array(X), np.array(y)
+
+@app.route('/logs', methods=['GET'])
+def get_logs():
+    try:
+        # Carregar os logs do arquivo JSON
+        if os.path.exists(log_file_path):
+            with open(log_file_path, 'r') as f:
+                logs = json.load(f)
+            return jsonify({"logs": logs[-100:]})  # Retorna os últimos 100 logs
+        else:
+            return jsonify({"logs": []})
+    except Exception as e:
+        return jsonify({"error": "Não foi possível acessar os logs."}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
