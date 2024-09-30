@@ -1,5 +1,5 @@
 # Escolha uma imagem base que tenha Python
-FROM python:3.9-slim
+FROM python:3.10
 
 # Defina o diretório de trabalho
 WORKDIR /app
@@ -9,10 +9,8 @@ COPY requirements.txt .
 
 # Crie e ative um ambiente virtual
 RUN python -m venv venv
-RUN . venv/bin/activate
+RUN . venv/bin/activate && pip install -r requirements.txt
 
-# Instale as dependências
-RUN pip install --no-cache-dir -r requirements.txt
 
 # Copie o restante do código para o contêiner
 COPY . .
