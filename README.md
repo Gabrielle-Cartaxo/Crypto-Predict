@@ -13,7 +13,7 @@
 
 ## Descrição do Sistema
 
-O Sistema de Previsão de Criptoativos é uma aplicação que utiliza técnicas de Machine Learning para analisar dados históricos de preços de criptomoedas, especificamente do Bitcoin, coletados através da API da CoinGecko e prever os melhores momentos de compra e venda. O sistema é dividido em duas partes principais: um frontend interativo para visualização e interação do usuário e um backend que processa as solicitações e executa os modelos de previsão.
+O Sistema de Previsão de Criptoativos é uma aplicação que utiliza técnicas de Machine Learning para analisar dados históricos de preços de criptomoedas, especificamente do Bitcoin, coletados através da API da CoinGecko (para mais detalhes sobre o acesso a API, acesse ````src/exploracao/import_data.py``` e prever os melhores momentos de compra e venda. O sistema é dividido em duas partes principais: um frontend interativo para visualização e interação do usuário e um backend que processa as solicitações e executa um modelo de previsão. O modelo escolhido foi um LSTM, e para ver mais detalhes da exploração dos dados e escolha dos modelos, acesse os notebooks que estão no diretório ```src/exploracao```, sendo eles **exploracao.ipynb** e **modelo.ipynb**.
 
 ## Funcionalidades
 
@@ -43,6 +43,7 @@ O sistema é composto por duas partes principais:
 2. **Backend**:
    - Também implementado em Flask, com a lógica de negócio para processamento de dados e modelagem.
    - Utiliza TensorFlow para o treinamento e execução do modelo de Machine Learning.
+   - Utiliza SQLite para armazenar os dados dos logs do sistema.
 
 ## Requisitos
 
