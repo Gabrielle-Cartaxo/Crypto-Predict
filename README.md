@@ -27,13 +27,10 @@ O Sistema de Previsão de Criptoativos é uma aplicação que utiliza técnicas 
 Para visualizar o funcionamento do sistema, assista aos vídeos abaixo:
 
 ### Sistema de previsões de Bitcoin + Retreinamento
-<iframe width="560" height="315" src="https://youtu.be/49Lh5dwHcpU" frameborder="0" allowfullscreen></iframe>
-
+[![Assista ao vídeo](https://img.youtube.com/vi/49Lh5dwHcpU/0.jpg)](https://youtu.be/49Lh5dwHcpU)
 
 ### Logs do Sistema
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/Uxm8aGU16FY" frameborder="0" allowfullscreen></iframe>
-
+[![Assista ao vídeo](https://img.youtube.com/vi/Uxm8aGU16FY/0.jpg)](https://youtu.be/Uxm8aGU16FY)
 
 ## Arquitetura do Sistema
 
